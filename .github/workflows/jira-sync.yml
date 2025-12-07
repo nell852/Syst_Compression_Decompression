@@ -13,15 +13,15 @@ jobs:
         run: |
           # Récupération du message du commit
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-
+          
           # Extraction des tickets au format AUDIT-XXX
           ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oE 'AUDIT-[0-9]+' || true)
-
+          
           if [ -z "$ISSUE_KEY" ]; then
             echo "No Jira issue found in commit message."
           else
             echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
-          fi
+            echo "Found Jira issue: $ISSUE_KEY"
 
       - name: Add comment to Jira
         if: steps.extract.outputs.issue_key != ''
@@ -29,9 +29,7 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            -d '{
-              "body": "✅ Commit: ${{ github.event.head_commit.message }}\n👤 By: ${{ github.actor }}\n🔗 ${{ github.event.head_commit.url }}"
-            }' \
+            -d "{\"body\": \"✅ Commit: ${{ github.event.head_commit.message }}\\n👤 By: ${{ github.actor }}\\n🔗 ${{ github.event.head_commit.url }}\"}" \
             "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/comment"
 
       - name: Transition to EN COURS DE REVUE
@@ -40,5 +38,5 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            -d '{"transition": {"id": "9"}}' \
+            -d "{\"transition\": {\"id\": \"41\"}}" \
             "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/transitions"
