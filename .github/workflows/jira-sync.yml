@@ -12,10 +12,15 @@ jobs:
         id: extract
         run: |
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-          # Capture les tickets au format AUDIT-XXX
-          ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oP 'AUDIT-\d+')
-          echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
-      
+          
+          # Capture les tickets au format AUDIT-XXX avec grep compatible Actions
+          ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oE 'AUDIT-[0-9]+')
+          
+          if [ -z "$ISSUE_KEY" ]; then
+            echo "No Jira issue found in commit message."
+          else
+            echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
+
       - name: Add comment to Jira
         if: steps.extract.outputs.issue_key != ''
         run: |
@@ -26,7 +31,7 @@ jobs:
               "body": "✅ Commit: ${{ github.event.head_commit.message }}\n👤 By: ${{ github.actor }}\n🔗 ${{ github.event.head_commit.url }}"
             }' \
             "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/comment"
-      
+
       - name: Transition to EN COURS DE REVUE
         if: steps.extract.outputs.issue_key != ''
         run: |
