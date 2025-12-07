@@ -7,16 +7,15 @@ on:
 jobs:
   update-jira:
     runs-on: ubuntu-latest
+    
     steps:
       - name: Extract Jira Issue Key
         id: extract
         run: |
           # Récupération du message du commit
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-
           # Extraction des tickets au format AUDIT-XXX
           ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oE 'AUDIT-[0-9]+' || true)
-
           if [ -z "$ISSUE_KEY" ]; then
             echo "No Jira issue found in commit message."
           else
@@ -27,11 +26,71 @@ jobs:
       - name: Add comment to Jira
         if: steps.extract.outputs.issue_key != ''
         run: |
-          COMMENT_BODY="✅ Commit: ${{ github.event.head_commit.message }} 👤 By: ${{ github.actor }} 🔗 ${{ github.event.head_commit.url }}"
+          # Format ADF (Atlassian Document Format) requis pour Jira API v3
+          cat > comment.json << 'EOF'
+          {
+            "body": {
+              "type": "doc",
+              "version": 1,
+              "content": [
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "✅ Commit: ",
+                      "marks": [{"type": "strong"}]
+                    },
+                    {
+                      "type": "text",
+                      "text": "${{ github.event.head_commit.message }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "👤 By: ",
+                      "marks": [{"type": "strong"}]
+                    },
+                    {
+                      "type": "text",
+                      "text": "${{ github.actor }}"
+                    }
+                  ]
+                },
+                {
+                  "type": "paragraph",
+                  "content": [
+                    {
+                      "type": "text",
+                      "text": "🔗 "
+                    },
+                    {
+                      "type": "text",
+                      "text": "${{ github.event.head_commit.url }}",
+                      "marks": [
+                        {
+                          "type": "link",
+                          "attrs": {
+                            "href": "${{ github.event.head_commit.url }}"
+                          }
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+          EOF
+          
           curl -X POST \
             -H "Content-Type: application/json" \
             -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            --data "{\"body\": \"$COMMENT_BODY\"}" \
+            -d @comment.json \
             "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/comment"
 
       - name: Transition to EN COURS DE REVUE
