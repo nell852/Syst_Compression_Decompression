@@ -11,11 +11,12 @@ jobs:
       - name: Extract Jira Issue Key
         id: extract
         run: |
+          # Récupération du message du commit
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-          
-          # Capture les tickets au format AUDIT-XXX avec grep compatible Actions
-          ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oE 'AUDIT-[0-9]+')
-          
+
+          # Extraction des tickets au format AUDIT-XXX
+          ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oE 'AUDIT-[0-9]+' || true)
+
           if [ -z "$ISSUE_KEY" ]; then
             echo "No Jira issue found in commit message."
           else
