@@ -21,6 +21,7 @@ jobs:
             echo "No Jira issue found in commit message."
           else
             echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
+          fi
 
       - name: Add comment to Jira
         if: steps.extract.outputs.issue_key != ''
