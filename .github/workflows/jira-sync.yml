@@ -27,12 +27,11 @@ jobs:
       - name: Add comment to Jira
         if: steps.extract.outputs.issue_key != ''
         run: |
+          COMMENT_BODY="✅ Commit: ${{ github.event.head_commit.message }} 👤 By: ${{ github.actor }} 🔗 ${{ github.event.head_commit.url }}"
           curl -X POST \
             -H "Content-Type: application/json" \
             -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            -d '{
-              "body": "✅ Commit: ${{ github.event.head_commit.message }}\n👤 By: ${{ github.actor }}\n🔗 ${{ github.event.head_commit.url }}"
-            }' \
+            --data "{\"body\": \"$COMMENT_BODY\"}" \
             "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/comment"
 
       - name: Transition to EN COURS DE REVUE
