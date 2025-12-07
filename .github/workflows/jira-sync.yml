@@ -1,0 +1,37 @@
+name: Sync with Jira
+
+on:
+  push:
+    branches: [ main, develop ]
+
+jobs:
+  update-jira:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Extract Jira Issue Key
+        id: extract
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          # Capture les tickets au format AUDIT-XXX
+          ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oP 'AUDIT-\d+')
+          echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
+      
+      - name: Add comment to Jira
+        if: steps.extract.outputs.issue_key != ''
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -d '{
+              "body": "✅ Commit: ${{ github.event.head_commit.message }}\n👤 By: ${{ github.actor }}\n🔗 ${{ github.event.head_commit.url }}"
+            }' \
+            "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/comment"
+      
+      - name: Transition to EN COURS DE REVUE
+        if: steps.extract.outputs.issue_key != ''
+        run: |
+          curl -X POST \
+            -H "Content-Type: application/json" \
+            -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
+            -d '{"transition": {"id": "9"}}' \
+            "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/transitions"
