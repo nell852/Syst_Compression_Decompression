@@ -17,7 +17,7 @@ jobs:
           # Extraction des tickets au format AUDIT-XXX
           ISSUE_KEY=$(echo "$COMMIT_MSG" | grep -oE 'AUDIT-[0-9]+' || true)
           if [ -z "$ISSUE_KEY" ]; then
-            echo "No Jira issue found in commit message."
+            echo "No Jira issue found in commit messages."
           else
             echo "issue_key=$ISSUE_KEY" >> $GITHUB_OUTPUT
             echo "Found Jira issue: $ISSUE_KEY"
