@@ -99,5 +99,5 @@ jobs:
           curl -X POST \
             -H "Content-Type: application/json" \
             -u "${{ secrets.JIRA_EMAIL }}:${{ secrets.JIRA_API_TOKEN }}" \
-            -d '{"transition": {"id": "41"}}' \
+            -d '{"transition": {"id": "51"}}' \
             "https://${{ secrets.JIRA_DOMAIN }}/rest/api/3/issue/${{ steps.extract.outputs.issue_key }}/transitions"
