@@ -20,7 +20,7 @@ Un système de compression et décompression de données utilisant l'algorithme 
   - `ext-hash`
   - `ext-json`
 - Composer pour la gestion des dépendances
-- Minimum 512 MB de RAM disponible
+- Minimum 512 MB de RAM disponibles
 
 ## 🔧 Installation
 
